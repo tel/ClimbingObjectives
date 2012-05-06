@@ -3,5 +3,6 @@ logloss = function(labs, probs) {
     sum = 0
     for (i in 1:N) {
         sum = labs[i]*log(probs[i]) + (1-labs[i])*log(1-probs[i])
+    }
     -sum/N
 }

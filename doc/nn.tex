@@ -1,0 +1,106 @@
+\documentclass{article}
+\usepackage[fleqn]{mathtools}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{units}
+\usepackage{paralist}
+\usepackage{booktabs}
+
+\mathtoolsset{mathic, showonlyrefs}
+\begin{document}
+
+\newcommand\gnn{\ensuremath{g_{\mathrm{nn}}}}
+\newcommand{\pnorm}[2]{\ensuremath{\vert\vert #2 \vert\vert_{#1}}}
+\newcommand\twonorm[1]{\pnorm{2}{#1}}
+
+
+\section{Neural net backpropagation}
+\label{sec:backprop}
+
+Let $\mathcal{D}_n = \{(X_i, Y_i) : i \le n\}$ be a set of training
+data with $X_i \in \mathcal{R}^d$ and $Y_i \in \{0, 1\}$. A MLP with a
+single hidden layer of $H > 0$ nodes is fully defined by the weight
+matrices $W^1 = [w^1_{ij}] \in \mathcal{R}^{H \times d}$ and $W^2 =
+[w_i^2] \in \mathcal{R}^{H \times 1}$. To predict the posterior, $P(Y
+= 1| X)$ of a novel observation $(X, Y)$, we use $\gnn(X) = o$ where
+\begin{align}
+  h_i^* &\triangleq \sum_j w^1_{ij} X_j = W_i^1 \cdot X &   h_i &\triangleq f(h_i^*) \\
+  o^* &\triangleq \sum_i w^2_i h_i = W^2 \cdot H &   o &\triangleq f(o^*)
+\end{align}
+where $W_i^1$ is the $i$th row of $W^1$ and $H$ is the vector
+$[h_i]$. We similarly define $H^* = [h^*_i]$. The function $f$ is the
+logistic function mapping $x \mapsto (1+e^{-x})^{-1}$ with the
+property that $f' = f(1-f)$.
+
+Naming the predicted probability $\hat{P} = \gnn(X)$, we can define
+the cross-entropy loss function $l(\hat{P}, Y) = -\mathbb{E}(Y
+\log\hat{P} + (1-Y)\log(1-\hat{P}))$. Training the neural net is a
+process of finding the optimal choices for $W^1$ and $W^2$. Starting
+with initial guesses for the weights, we can improve the value of the
+loss function by following the negative gradient of the loss
+w.r.t. the weights (gradient descent).
+\begin{align}
+  W^1& \leftarrow W^1 - \gamma \Delta^1 l &
+  W^2& \leftarrow W^2 - \gamma \Delta^2 l
+\end{align}
+where $\Delta^i$ is the gradient operator w.r.t. the weight matrix
+$W^i$. We compute those gradients below where the derivation procedes
+identically ($i \in \{1, 2\}$) at first.
+\begin{align}
+  \Delta^i_{ij} l &= \frac{d l}{d \hat{P}} \Delta^i_{ij} \hat{p}(X) \\
+  \Delta^i_{ij} \hat{p}(X) &= \Delta^i_{ij} \gnn(X) = \Delta^i_{ij} o \\
+  \Delta^i_{ij} o &= f(o^*)(1-f(o^*)) \Delta^i_{ij} o^* = o(1-o) \Delta^i_{ij} o^*
+\end{align}
+then, specializing for $i = 2$
+\begin{align}
+  \Delta^2_{i} o^* &= \sum_j h_j \Delta^2_{i} w^2_j = h_i
+\end{align}
+and specializing for $i = 1$
+\begin{align}
+  \Delta^1_{ij} o^* &= \sum_k w^2_k \Delta^1_{ij} h_k = w^2_i \Delta^1_{ij} h_i \\
+  \Delta^1_{ij} h_i &= f(h_i^*)(1-f(h_i^*)) \Delta^1_{ij} h_i^* = h_i(1-h_i) \Delta^1_{ij} h_i^* \\
+  \Delta^1_{ij} h_i^* &= \sum_k X_k \Delta^1_{ij} w^1_{ik} = X_j
+\end{align}
+and, consolidating the backprop steps, we have
+\begin{align}
+  \Delta^1_{ij} l &= \frac{d l}{d \hat{P}} o(1-o) w^2_i h_i(1-h_i) X_j \\
+  \Delta^2_{i} l &= \frac{d l}{d \hat{P}} o(1-o) h_i
+\end{align}
+which generalizes for various loss functions, but using cross entropy
+we have 
+\begin{align}
+  \frac{d l}{d \hat{P}} &= \frac{1 - Y}{1 - o} -
+  \frac{Y}{o}
+\end{align}
+and converting to vector notation
+\begin{align}
+  \Delta^1 l &= k [w^2_i h_i(1-h_i)] \times X_j \\
+  \Delta^2 l &= k H
+\end{align}
+where $k = \frac{d l}{d \hat{P}} o(1-o) = o(1 - Y) - Y(1-o)$ and
+$(\times)$ is the outer product.
+
+\subsection{Regularization}
+\label{sec:nn-regularization}
+
+Vanilla gradient descent as described above is liable to overfit. One
+way to reduce this tendency is to regularize the training procedure by
+penalizing large weights.
+
+If we consider the regularized loss with additive regularizer $r$,
+$l_r(\hat{P}, Y) = l(\hat{P}, Y) + \beta r(W^1, W^2)$ then we see we
+can augment the gradients computed above by just the additive term
+contributed by $\Delta^i_{ij} r$. The simplest choice of $r$ is
+the 2-norm in $W^2$ and the rows $W^1_i$
+\begin{align}
+  r(W^1, W^2) = \frac{1}{2}\twonorm{W^2}^2 + \frac{1}{2}\sum_i \twonorm{W^1_i}^2
+\end{align}
+such that we get the regularization terms
+\begin{align}
+  \Delta^2 r = W^2 \\
+  \Delta^1_i r = W^1_i
+\end{align}
+which is essentially a derivation of the intuitive notion of
+regularization.
+
+\end{document}
