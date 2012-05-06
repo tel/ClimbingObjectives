@@ -30,7 +30,8 @@
   {:d num-input
    :H num-hidden
    :wi (random-array-2d num-hidden num-input)
-   :wh (random-array num-hidden)})
+   :wh (random-array num-hidden)
+   :seen 0})
 
 (defn forward-pass [H wi wh h* h x]
   ;; Update the h* and h vectors
@@ -50,6 +51,7 @@
 (defn update-network [net x y alpha beta]
   (let [d (:d net)
         H (:H net)
+        seen (:seen net)
         wi ^"[[D" (:wi net)
         wh ^doubles (:wh net)
         h* ^doubles (make-array Double/TYPE H)
@@ -71,7 +73,7 @@
                    (* alpha
                       k h-val)
                    (* beta wh-val)))))
-      (merge net {:wi wi :wh wh}))))
+      (merge net {:seen (inc seen) :wi wi :wh wh}))))
 
 (defn train-net [dat iters init-net]
   (let [dat (cycle dat)]

@@ -31,9 +31,9 @@
 (defonce test-dat  (read-data "data/test.csv" tester))
 (defonce t0        (Date.))
 (defonce net (atom (nn/init-network (alength (first (first train-dat)))
-                                    100)))
+                                    75)))
 
-(defonce trainer (nn/train-on-atom train-dat net))
+(defonce trainer-thread (nn/train-on-atom train-dat net))
 
 (def drawbridge-handler
   (-> (cemerick.drawbridge/ring-handler)
@@ -47,7 +47,7 @@
     (if (= "/repl" (:uri req))
       (drawbridge-handler req)
       (handler req))))
-n
+
 (defn app [req]
   {:status 200
    :headers {"Content-Type" "application/html"}
