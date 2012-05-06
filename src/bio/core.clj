@@ -27,8 +27,21 @@
       []
       (csv/read-csv in-file)))))
 
-(defonce train-dat (read-data "data/train.csv" trainer))
-(defonce test-dat  (read-data "data/test.csv" tester))
+;; (defonce train-dat (read-data "data/train.csv" trainer))
+;; (defonce test-dat  (read-data "data/test.csv" tester))
+
+(def drawbridge-handler
+  (-> (cemerick.drawbridge/ring-handler)
+      (ring.middleware.keyword-params/wrap-keyword-params)
+      (ring.middleware.nested-params/wrap-nested-params)
+      (ring.middleware.params/wrap-params)
+      (ring.middleware.session/wrap-session)))
+
+(defn wrap-drawbridge [handler]
+  (fn [req]
+    (if (= "/repl" (:uri req))
+      (drawbridge-handler req)
+      (handler req))))
 
 (defn app [req]
   {:status 200
@@ -37,10 +50,5 @@
 
 (defn -main [& [port]]
   (let [port (Integer. (or port (System/getenv "PORT")))]
-    (jetty/run-jetty (-> #'app
-                         drawbridge/ring-handler
-                         ring.middleware.keyword-params/wrap-keyword-params
-                         ring.middleware.nested-params/wrap-nested-params
-                         ring.middleware.params/wrap-params
-                         ring.middleware.session/wrap-session)
+    (jetty/run-jetty drawbridge-handler
                      {:port port})))
