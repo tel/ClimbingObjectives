@@ -2,6 +2,7 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [ring.adapter.jetty :as jetty]
+            [clatrix.core :as c]
             ring.middleware.keyword-params
             ring.middleware.nested-params
             ring.middleware.params
@@ -14,8 +15,14 @@
 (defn trainer [vals]
   [(into-array Double/TYPE (rest vals)) (first vals)])
 
-(defn tester [vals]
+(defn xs-only [vals]
   (into-array Double/TYPE (rest vals)))
+
+(defn ys-only [vals]
+  (first vals))
+
+(defn tester [vals]
+  (into-array Double/TYPE vals))
 
 (defn read-data [path f]
   (with-open [in-file (io/reader path)]
@@ -27,8 +34,8 @@
       []
       (csv/read-csv in-file)))))
 
-(defonce train-dat (read-data "data/train.csv" trainer))
-(defonce test-dat  (read-data "data/test.csv" tester))
+(defonce train-dat (read-data "data/trainPC.csv" trainer))
+(defonce test-dat  (read-data "data/testPC.csv" tester))
 (defonce t0        (Date.))
 (defonce net (atom (nn/init-network (alength (first (first train-dat)))
                                     75)))
