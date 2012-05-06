@@ -82,6 +82,12 @@
           dat)
          iters)))
 
+(defn train-on-atom [dat anet]
+  (let [dat (cycle dat)]
+    (future
+      (doseq [[x y] dat]
+        (swap! anet #(update-network % x y 0.05 0.005))))))
+
 (defn train-from-data [dat num-hidden iters]
   (let [[xproto yproto] (first dat)
         d (alength xproto)
