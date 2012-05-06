@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.3.0"]
-                 [tappan/matrix "0.0.3"]
+                 [ring "1.1.0"]
+                 [com.cemerick/drawbridge "0.0.3"]
                  [org.clojure/data.csv "0.1.2"]]
   :profiles {:dev {:dependencies [[vimclojure/server "2.3.1"]]}})
